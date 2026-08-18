@@ -1,18 +1,23 @@
 const app = require("./app");
 const env = require("./config/env");
 const connectDB = require("./config/database");
+const logger = require("./utils/logger");
 
 const startServer = async () => {
     try {
         await connectDB();
 
         app.listen(env.port, () => {
-            console.log(
+            logger.info(
                 `${env.nodeEnv} auth-service running on port ${env.port}`
             );
         });
     } catch (error) {
-        console.error("Failed to start auth-service");
+        logger.error(
+            { error: error.message },
+            "Failed to start auth-service"
+        );
+
         process.exit(1);
     }
 };

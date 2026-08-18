@@ -1,4 +1,6 @@
 const express = require("express");
+const errorHandler = require("./middleware/errorHandler");
+const notFound = require("./middleware/notFound");
 
 const app = express();
 
@@ -10,5 +12,8 @@ app.get("/health", (req, res) => {
         service: "auth-service",
     });
 });
+
+app.use(notFound);
+app.use(errorHandler);
 
 module.exports = app;
