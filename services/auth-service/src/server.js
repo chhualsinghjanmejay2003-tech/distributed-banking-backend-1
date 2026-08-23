@@ -13,6 +13,7 @@ let server;
 const startServer = async () => {
     try {
         await connectDB();
+        await connectRedis();
 
         server = app.listen(env.port, () => {
             logger.info(
