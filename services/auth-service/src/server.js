@@ -10,10 +10,16 @@ const {
 } = require("./config/redis");
 let server;
 
+const {
+    connectRabbitMQ,
+    closeRabbitMQ,
+} = require("./config/rabbitmq");
+
 const startServer = async () => {
     try {
         await connectDB();
         await connectRedis();
+        await connectRabbitMQ();
 
         server = app.listen(env.port, () => {
             logger.info(
@@ -50,6 +56,8 @@ const gracefulShutdown = async (signal) => {
 
                 logger.info("Redis connection closed");
             }
+
+            await closeRabbitMQ();
 
             process.exit(0);
         } catch (error) {
