@@ -15,12 +15,17 @@ const {
     closeRabbitMQ,
 } = require("./config/rabbitmq");
 
+const {
+    connectKafka,
+    disconnectKafka,
+} = require("./config/kafka");
+
 const startServer = async () => {
     try {
         await connectDB();
         await connectRedis();
         await connectRabbitMQ();
-
+        await connectKafka();
         server = app.listen(env.port, () => {
             logger.info(
                 `${env.nodeEnv} auth-service running on port ${env.port}`
@@ -58,6 +63,7 @@ const gracefulShutdown = async (signal) => {
             }
 
             await closeRabbitMQ();
+            await disconnectKafka();
 
             process.exit(0);
         } catch (error) {
