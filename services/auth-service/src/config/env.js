@@ -10,11 +10,16 @@ const env = {
     redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
 
     rabbitmqUrl: process.env.RABBITMQ_URL || "amqp://localhost:5672",
-    
+
     jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
 
     logLevel: process.env.LOG_LEVEL || "info",
+
+    kafkaBrokers: (
+        process.env.KAFKA_BROKERS ||
+        "localhost:9092"
+    ).split(","),
 };
 
 if (!env.mongodbUri) {
