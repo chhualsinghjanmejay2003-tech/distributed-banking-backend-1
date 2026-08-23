@@ -4,6 +4,10 @@ const connectDB = require("./config/database");
 const logger = require("./utils/logger");
 const mongoose = require("mongoose");
 
+const {
+    redisClient,
+    connectRedis,
+} = require("./config/redis");
 let server;
 
 const startServer = async () => {
@@ -39,6 +43,12 @@ const gracefulShutdown = async (signal) => {
             await mongoose.connection.close();
 
             logger.info("MongoDB connection closed");
+
+            if (redisClient.isOpen) {
+                await redisClient.quit();
+
+                logger.info("Redis connection closed");
+            }
 
             process.exit(0);
         } catch (error) {
