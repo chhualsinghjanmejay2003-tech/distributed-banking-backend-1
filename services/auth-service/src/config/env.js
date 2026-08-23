@@ -5,9 +5,17 @@ const env = {
 
     port: Number(process.env.AUTH_SERVICE_PORT) || 3001,
 
+    mongodbUri: process.env.MONGODB_URI,
+
     jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
+
+    logLevel: process.env.LOG_LEVEL || "info",
 };
+
+if (!env.mongodbUri) {
+    throw new Error("MONGODB_URI is required");
+}
 
 if (!env.jwtAccessSecret) {
     throw new Error("JWT_ACCESS_SECRET is required");
