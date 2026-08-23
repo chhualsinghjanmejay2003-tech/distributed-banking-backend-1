@@ -6,6 +6,8 @@ const env = {
     port: Number(process.env.AUTH_SERVICE_PORT) || 3001,
 
     mongodbUri: process.env.MONGODB_URI,
+    
+    redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
 
     jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
