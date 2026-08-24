@@ -1,9 +1,6 @@
 const userRepository = require("../repositories/user.repository");
 const {
     hashPassword,
-} = require("../utils/password");
-
-const {
     comparePassword,
 } = require("../utils/password");
 
@@ -54,6 +51,12 @@ const login = async ({ email, password }) => {
         throw error;
     }
 
+    if (!user.isActive) {
+        const error = new Error("Account is inactive");
+        error.statusCode = 403;
+        throw error;
+    }
+
     const passwordMatches = await comparePassword(
         password,
         user.passwordHash
@@ -62,12 +65,6 @@ const login = async ({ email, password }) => {
     if (!passwordMatches) {
         const error = new Error("Invalid email or password");
         error.statusCode = 401;
-        throw error;
-    }
-
-    if (!user.isActive) {
-        const error = new Error("Account is inactive");
-        error.statusCode = 403;
         throw error;
     }
 
