@@ -3,6 +3,14 @@ const {
     hashPassword,
 } = require("../utils/password");
 
+const {
+    comparePassword,
+} = require("../utils/password");
+
+const {
+    generateAccessToken,
+} = require("../utils/jwt");
+
 const register = async ({ name, email, password }) => {
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -33,6 +41,51 @@ const register = async ({ name, email, password }) => {
     };
 };
 
+const login = async ({ email, password }) => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const user = await userRepository.findByEmail(
+        normalizedEmail
+    );
+
+    if (!user) {
+        const error = new Error("Invalid email or password");
+        error.statusCode = 401;
+        throw error;
+    }
+
+    const passwordMatches = await comparePassword(
+        password,
+        user.passwordHash
+    );
+
+    if (!passwordMatches) {
+        const error = new Error("Invalid email or password");
+        error.statusCode = 401;
+        throw error;
+    }
+
+    if (!user.isActive) {
+        const error = new Error("Account is inactive");
+        error.statusCode = 403;
+        throw error;
+    }
+
+    const accessToken = generateAccessToken(user);
+
+    return {
+        accessToken,
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            isActive: user.isActive,
+        },
+    };
+};
+
 module.exports = {
     register,
+    login,
 };

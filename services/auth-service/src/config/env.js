@@ -11,8 +11,11 @@ const env = {
 
     rabbitmqUrl: process.env.RABBITMQ_URL || "amqp://localhost:5672",
 
-    jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
+    
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
+
+    jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
+    jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
 
     logLevel: process.env.LOG_LEVEL || "info",
 
@@ -32,6 +35,10 @@ if (!env.jwtAccessSecret) {
 
 if (!env.jwtRefreshSecret) {
     throw new Error("JWT_REFRESH_SECRET is required");
+}
+
+if (!process.env.JWT_ACCESS_SECRET) {
+    throw new Error("JWT_ACCESS_SECRET is required");
 }
 
 module.exports = env;
