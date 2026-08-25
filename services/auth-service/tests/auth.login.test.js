@@ -7,9 +7,26 @@ jest.mock("../src/utils/jwt", () => ({
     generateAccessToken: jest.fn(),
 }));
 
+jest.mock("../src/utils/refreshToken", () => ({
+    generateRefreshToken: jest.fn(),
+}));
+
+jest.mock("../src/repositories/session.repository", () => ({
+    createSession: jest.fn(),
+}));
+
 const userRepository = require("../src/repositories/user.repository");
+
 const password = require("../src/utils/password");
+
 const jwt = require("../src/utils/jwt");
+
+const refreshToken = require("../src/utils/refreshToken");
+
+const sessionRepository = require(
+    "../src/repositories/session.repository"
+);
+
 const authService = require("../src/services/auth.service");
 
 describe("Auth Service - Login", () => {
@@ -36,6 +53,12 @@ describe("Auth Service - Login", () => {
             "mock-access-token"
         );
 
+        refreshToken.generateRefreshToken.mockReturnValue(
+            "mock-refresh-token"
+        );
+
+        sessionRepository.createSession.mockResolvedValue();
+
         const result = await authService.login({
             email: " JANMEJAY@EXAMPLE.COM ",
             password: "StrongPassword123!",
@@ -58,8 +81,27 @@ describe("Auth Service - Login", () => {
             jwt.generateAccessToken
         ).toHaveBeenCalledWith(user);
 
+        expect(
+            refreshToken.generateRefreshToken
+        ).toHaveBeenCalled();
+
+        expect(
+            sessionRepository.createSession
+        ).toHaveBeenCalledWith(
+            "mock-refresh-token",
+            {
+                userId: "user-id-123",
+                role: "customer",
+            },
+            604800
+        );
+
         expect(result.accessToken).toBe(
             "mock-access-token"
+        );
+
+        expect(result.refreshToken).toBe(
+            "mock-refresh-token"
         );
 
         expect(result.user).toEqual({
@@ -91,6 +133,14 @@ describe("Auth Service - Login", () => {
 
         expect(
             jwt.generateAccessToken
+        ).not.toHaveBeenCalled();
+
+        expect(
+            refreshToken.generateRefreshToken
+        ).not.toHaveBeenCalled();
+
+        expect(
+            sessionRepository.createSession
         ).not.toHaveBeenCalled();
     });
 
@@ -129,6 +179,14 @@ describe("Auth Service - Login", () => {
         expect(
             jwt.generateAccessToken
         ).not.toHaveBeenCalled();
+
+        expect(
+            refreshToken.generateRefreshToken
+        ).not.toHaveBeenCalled();
+
+        expect(
+            sessionRepository.createSession
+        ).not.toHaveBeenCalled();
     });
 
     test("should reject login when account is inactive", async () => {
@@ -160,6 +218,14 @@ describe("Auth Service - Login", () => {
 
         expect(
             jwt.generateAccessToken
+        ).not.toHaveBeenCalled();
+
+        expect(
+            refreshToken.generateRefreshToken
+        ).not.toHaveBeenCalled();
+
+        expect(
+            sessionRepository.createSession
         ).not.toHaveBeenCalled();
     });
 });

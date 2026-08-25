@@ -8,6 +8,20 @@ const {
     generateAccessToken,
 } = require("../utils/jwt");
 
+const {
+    generateRefreshToken,
+} = require("../utils/refreshToken");
+
+const {
+    createSession,
+} = require("../repositories/session.repository");
+
+const {
+    parseDurationToSeconds,
+} = require("../utils/time");
+
+const env = require("../config/env");
+
 const register = async ({ name, email, password }) => {
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -70,8 +84,24 @@ const login = async ({ email, password }) => {
 
     const accessToken = generateAccessToken(user);
 
+    const refreshToken = generateRefreshToken();
+
+    const refreshTokenTtl = parseDurationToSeconds(
+        env.jwtRefreshExpiresIn
+    );
+
+    await createSession(
+        refreshToken,
+        {
+            userId: user._id.toString(),
+            role: user.role,
+        },
+        refreshTokenTtl
+    );
+
     return {
         accessToken,
+        refreshToken,
         user: {
             id: user._id,
             name: user.name,
