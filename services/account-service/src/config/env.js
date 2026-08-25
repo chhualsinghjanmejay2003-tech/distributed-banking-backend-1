@@ -6,10 +6,16 @@ const env = {
     port: Number(process.env.PORT) || 3002,
 
     mongoUri: process.env.MONGO_URI,
+
+    jwtSecret: process.env.JWT_ACCESS_SECRET,
 };
 
 if (!env.mongoUri) {
     throw new Error("MONGO_URI is required");
+}
+
+if (!env.jwtSecret) {
+    throw new Error("JWT_ACCESS_SECRET is required");
 }
 
 module.exports = env;
