@@ -1,5 +1,9 @@
 const express = require("express");
 
+const accountRoutes = require(
+    "./routes/account.routes"
+);
+
 const app = express();
 
 app.use(express.json());
@@ -10,5 +14,7 @@ app.get("/health", (req, res) => {
         service: "account-service",
     });
 });
+
+app.use("/accounts", accountRoutes);
 
 module.exports = app;
