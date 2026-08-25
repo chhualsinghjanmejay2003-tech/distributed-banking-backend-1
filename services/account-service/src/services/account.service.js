@@ -52,7 +52,8 @@ const createAccount = async ({ userId }) => {
 };
 
 const getAccountByNumber = async (
-    accountNumber
+    accountNumber,
+    userId
 ) => {
     const account =
         await accountRepository.findByAccountNumber(
@@ -65,6 +66,19 @@ const getAccountByNumber = async (
         );
 
         error.statusCode = 404;
+
+        throw error;
+    }
+
+    if (
+        account.userId.toString() !==
+        userId.toString()
+    ) {
+        const error = new Error(
+            "You are not authorized to access this account"
+        );
+
+        error.statusCode = 403;
 
         throw error;
     }

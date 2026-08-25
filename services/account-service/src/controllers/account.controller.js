@@ -24,7 +24,8 @@ const getAccount = async (req, res, next) => {
     try {
         const account =
             await accountService.getAccountByNumber(
-                req.params.accountNumber
+                req.params.accountNumber,
+                req.user.id
             );
 
         return res.status(200).json({
