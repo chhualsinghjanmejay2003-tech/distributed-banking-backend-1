@@ -30,7 +30,14 @@ const loginSchema = Joi.object({
         .required(),
 });
 
+const refreshSchema = Joi.object({
+    refreshToken: Joi.string()
+        .trim()
+        .required(),
+});
+
 module.exports = {
     registerSchema,
     loginSchema,
+    refreshSchema,
 };

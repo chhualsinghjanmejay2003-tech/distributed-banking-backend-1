@@ -14,6 +14,7 @@ const {
 
 const {
     createSession,
+    getSession,
 } = require("../repositories/session.repository");
 
 const {
@@ -112,7 +113,46 @@ const login = async ({ email, password }) => {
     };
 };
 
+const refresh = async (refreshToken) => {
+    if (!refreshToken) {
+        const error = new Error("Refresh token is required");
+        error.statusCode = 401;
+        throw error;
+    }
+
+    const session = await getSession(refreshToken);
+
+    if (!session) {
+        const error = new Error("Invalid or expired refresh token");
+        error.statusCode = 401;
+        throw error;
+    }
+
+    const user = await userRepository.findById(
+        session.userId
+    );
+
+    if (!user) {
+        const error = new Error("User not found");
+        error.statusCode = 401;
+        throw error;
+    }
+
+    if (!user.isActive) {
+        const error = new Error("Account is inactive");
+        error.statusCode = 403;
+        throw error;
+    }
+
+    const accessToken = generateAccessToken(user);
+
+    return {
+        accessToken,
+    };
+};
+
 module.exports = {
     register,
     login,
+    refresh,
 };
