@@ -8,11 +8,16 @@ const authenticate = require(
     "../middleware/auth.middleware"
 );
 
+const internalAuth = require(
+    "../middleware/internalAuth.middleware"
+);
+
 const router = express.Router();
 
 router.post(
     "/",
     authenticate,
+    
     accountController.createAccount
 );
 
@@ -30,12 +35,14 @@ router.get(
 
 router.post(
     "/:accountNumber/credit",
-    creditAccount
+    internalAuth,
+    accountController.creditAccount
 );
 
 router.post(
     "/:accountNumber/debit",
-    debitAccount
+    internalAuth,
+    accountController.debitAccount
 );
 
 module.exports = router;
