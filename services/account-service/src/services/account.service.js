@@ -92,8 +92,81 @@ const getAccountsByUserId = async (userId) => {
     );
 };
 
+const creditAccount = async (
+    accountNumber,
+    amount
+) => {
+    const account =
+        await accountRepository.creditAccount(
+            accountNumber,
+            amount
+        );
+
+    if (!account) {
+        const error = new Error(
+            "Account not found or inactive"
+        );
+
+        error.statusCode = 404;
+
+        throw error;
+    }
+
+    return account;
+};
+
+const debitAccount = async (
+    accountNumber,
+    amount
+) => {
+    const account =
+        await accountRepository.debitAccount(
+            accountNumber,
+            amount
+        );
+
+    if (!account) {
+        const existingAccount =
+            await accountRepository.findByAccountNumber(
+                accountNumber
+            );
+
+        if (!existingAccount) {
+            const error = new Error(
+                "Account not found"
+            );
+
+            error.statusCode = 404;
+
+            throw error;
+        }
+
+        if (existingAccount.status !== "active") {
+            const error = new Error(
+                "Account is inactive"
+            );
+
+            error.statusCode = 403;
+
+            throw error;
+        }
+
+        const error = new Error(
+            "Insufficient balance"
+        );
+
+        error.statusCode = 400;
+
+        throw error;
+    }
+
+    return account;
+};
+
 module.exports = {
     createAccount,
     getAccountByNumber,
     getAccountsByUserId,
+    creditAccount,
+    debitAccount,
 };

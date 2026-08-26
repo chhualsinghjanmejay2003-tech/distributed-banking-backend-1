@@ -16,8 +16,53 @@ const findByUserId = async (userId) => {
     });
 };
 
+const creditAccount = async (
+    accountNumber,
+    amount
+) => {
+    return Account.findOneAndUpdate(
+        {
+            accountNumber,
+            status: "active",
+        },
+        {
+            $inc: {
+                balance: amount,
+            },
+        },
+        {
+            new: true,
+        }
+    );
+};
+
+const debitAccount = async (
+    accountNumber,
+    amount
+) => {
+    return Account.findOneAndUpdate(
+        {
+            accountNumber,
+            status: "active",
+            balance: {
+                $gte: amount,
+            },
+        },
+        {
+            $inc: {
+                balance: -amount,
+            },
+        },
+        {
+            new: true,
+        }
+    );
+};
+
 module.exports = {
     create,
     findByAccountNumber,
     findByUserId,
+    creditAccount,
+    debitAccount,
 };
