@@ -9,10 +9,20 @@ jest.mock("../src/middleware/auth.middleware", () =>
     })
 );
 
+jest.mock(
+    "../src/middleware/internalAuth.middleware",
+    () =>
+        jest.fn((req, res, next) => {
+            next();
+        })
+);
+
 jest.mock("../src/services/account.service", () => ({
     createAccount: jest.fn(),
     getAccountByNumber: jest.fn(),
     getAccountsByUserId: jest.fn(),
+    creditAccount: jest.fn(),
+    debitAccount: jest.fn(),
 }));
 
 const request = require("supertest");
@@ -148,10 +158,122 @@ describe("Account Routes", () => {
         });
     });
 
-    test("should return 404 for unknown route", async () => {
-        const response = await request(app)
-            .get("/something-that-does-not-exist");
+    describe(
+        "POST /accounts/:accountNumber/credit",
+        () => {
+            test(
+                "should credit an account",
+                async () => {
+                    const account = {
+                        _id: "account-id-123",
+                        userId: "user-id-123",
+                        accountNumber:
+                            "123456789012",
+                        balance: 6000,
+                        currency: "INR",
+                        status: "active",
+                    };
 
-        expect(response.status).toBe(404);
-    });
+                    accountService.creditAccount
+                        .mockResolvedValue(account);
+
+                    const response =
+                        await request(app)
+                            .post(
+                                "/accounts/123456789012/credit"
+                            )
+                            .send({
+                                amount: 1000,
+                            });
+
+                    expect(
+                        response.status
+                    ).toBe(200);
+
+                    expect(
+                        accountService
+                            .creditAccount
+                    ).toHaveBeenCalledWith(
+                        "123456789012",
+                        1000
+                    );
+
+                    expect(
+                        response.body
+                    ).toEqual({
+                        status: "success",
+                        data: {
+                            account,
+                        },
+                    });
+                }
+            );
+        }
+    );
+
+    describe(
+        "POST /accounts/:accountNumber/debit",
+        () => {
+            test(
+                "should debit an account",
+                async () => {
+                    const account = {
+                        _id: "account-id-123",
+                        userId: "user-id-123",
+                        accountNumber:
+                            "123456789012",
+                        balance: 4000,
+                        currency: "INR",
+                        status: "active",
+                    };
+
+                    accountService.debitAccount
+                        .mockResolvedValue(account);
+
+                    const response =
+                        await request(app)
+                            .post(
+                                "/accounts/123456789012/debit"
+                            )
+                            .send({
+                                amount: 1000,
+                            });
+
+                    expect(
+                        response.status
+                    ).toBe(200);
+
+                    expect(
+                        accountService
+                            .debitAccount
+                    ).toHaveBeenCalledWith(
+                        "123456789012",
+                        1000
+                    );
+
+                    expect(
+                        response.body
+                    ).toEqual({
+                        status: "success",
+                        data: {
+                            account,
+                        },
+                    });
+                }
+            );
+        }
+    );
+
+    test(
+        "should return 404 for unknown route",
+        async () => {
+            const response =
+                await request(app)
+                    .get(
+                        "/something-that-does-not-exist"
+                    );
+
+            expect(response.status).toBe(404);
+        }
+    );
 });
