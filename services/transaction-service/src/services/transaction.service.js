@@ -4,6 +4,10 @@ const transactionRepository = require(
     "../repositories/transaction.repository"
 );
 
+const accountClient = require(
+    "../clients/account.client"
+);
+
 const generateTransactionId = () => {
     return `txn-${crypto.randomUUID()}`;
 };
@@ -32,6 +36,10 @@ const createTransaction = async ({
     amount,
     currency = "INR",
 }) => {
+    // --------------------------------
+    // Basic validation
+    // --------------------------------
+
     if (!idempotencyKey) {
         const error = new Error(
             "Idempotency key is required"
@@ -70,15 +78,22 @@ const createTransaction = async ({
 
     validateAmount(amount);
 
+    // --------------------------------
+    // Idempotency check
+    // --------------------------------
+
     const existingTransaction =
-        await transactionRepository
-            .findByIdempotencyKey(
-                idempotencyKey
-            );
+        await transactionRepository.findByIdempotencyKey(
+            idempotencyKey
+        );
 
     if (existingTransaction) {
         return existingTransaction;
     }
+
+    // --------------------------------
+    // Deposit validation
+    // --------------------------------
 
     if (
         type === "deposit" &&
@@ -93,6 +108,10 @@ const createTransaction = async ({
         throw error;
     }
 
+    // --------------------------------
+    // Withdrawal validation
+    // --------------------------------
+
     if (
         type === "withdrawal" &&
         !sourceAccountId
@@ -105,6 +124,10 @@ const createTransaction = async ({
 
         throw error;
     }
+
+    // --------------------------------
+    // Transfer validation
+    // --------------------------------
 
     if (type === "transfer") {
         if (!sourceAccountId) {
@@ -141,6 +164,10 @@ const createTransaction = async ({
         }
     }
 
+    // --------------------------------
+    // Create pending transaction
+    // --------------------------------
+
     const transaction =
         await transactionRepository.create({
             transactionId:
@@ -161,17 +188,72 @@ const createTransaction = async ({
             status: "pending",
         });
 
-    return transaction;
+    // --------------------------------
+    // Execute account operation
+    // --------------------------------
+
+    try {
+        // Deposit
+        if (type === "deposit") {
+            await accountClient.creditAccount(
+                destinationAccountId,
+                amount
+            );
+        }
+
+        // Withdrawal
+        if (type === "withdrawal") {
+            await accountClient.debitAccount(
+                sourceAccountId,
+                amount
+            );
+        }
+
+        // Transfer
+        if (type === "transfer") {
+            await accountClient.debitAccount(
+                sourceAccountId,
+                amount
+            );
+
+            await accountClient.creditAccount(
+                destinationAccountId,
+                amount
+            );
+        }
+
+        // --------------------------------
+        // Mark transaction completed
+        // --------------------------------
+
+        const completedTransaction =
+            await transactionRepository.updateStatus(
+                transaction.transactionId,
+                "completed"
+            );
+
+        return completedTransaction;
+    } catch (error) {
+        // --------------------------------
+        // Mark transaction failed
+        // --------------------------------
+
+        await transactionRepository.updateStatus(
+            transaction.transactionId,
+            "failed"
+        );
+
+        throw error;
+    }
 };
 
 const getTransactionById = async (
     transactionId
 ) => {
     const transaction =
-        await transactionRepository
-            .findByTransactionId(
-                transactionId
-            );
+        await transactionRepository.findByTransactionId(
+            transactionId
+        );
 
     if (!transaction) {
         const error = new Error(
@@ -199,8 +281,9 @@ const getTransactionsByAccountId = async (
         throw error;
     }
 
-    return transactionRepository
-        .findByAccountId(accountId);
+    return transactionRepository.findByAccountId(
+        accountId
+    );
 };
 
 module.exports = {
