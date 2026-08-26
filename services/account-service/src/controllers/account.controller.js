@@ -57,8 +57,54 @@ const getMyAccounts = async (req, res, next) => {
     }
 };
 
+const creditAccount = async (req, res, next) => {
+    try {
+        const { accountNumber } = req.params;
+        const { amount } = req.body;
+
+        const account =
+            await accountService.creditAccount(
+                accountNumber,
+                amount
+            );
+
+        return res.status(200).json({
+            status: "success",
+            data: {
+                account,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const debitAccount = async (req, res, next) => {
+    try {
+        const { accountNumber } = req.params;
+        const { amount } = req.body;
+
+        const account =
+            await accountService.debitAccount(
+                accountNumber,
+                amount
+            );
+
+        return res.status(200).json({
+            status: "success",
+            data: {
+                account,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createAccount,
     getAccount,
     getMyAccounts,
+    creditAccount,
+    debitAccount,
 };

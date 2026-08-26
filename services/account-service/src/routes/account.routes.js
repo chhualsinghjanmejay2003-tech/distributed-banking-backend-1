@@ -28,4 +28,14 @@ router.get(
     accountController.getAccount
 );
 
+router.post(
+    "/:accountNumber/credit",
+    creditAccount
+);
+
+router.post(
+    "/:accountNumber/debit",
+    debitAccount
+);
+
 module.exports = router;
