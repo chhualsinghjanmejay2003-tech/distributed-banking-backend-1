@@ -4,7 +4,7 @@ const env = require("./config/env");
 
 const {
     connectMongoDB,
-} = require("./config/mongodb");
+} = require("./config/db");
 
 const startServer = async () => {
     try {
@@ -12,13 +12,13 @@ const startServer = async () => {
 
         app.listen(env.port, () => {
             console.log(
-                `${env.nodeEnv} account-service running on port ${env.port}`
+                `Account Service running on port ${env.port}`
             );
         });
     } catch (error) {
         console.error(
-            "Failed to start account-service:",
-            error.message
+            "Failed to start Account Service:",
+            error
         );
 
         process.exit(1);

@@ -12,12 +12,12 @@ const startServer = async () => {
 
         app.listen(env.port, () => {
             console.log(
-                `Transaction Service running on port ${env.port}`
+                `Account Service running on port ${env.port}`
             );
         });
     } catch (error) {
         console.error(
-            "Failed to start Transaction Service:",
+            "Failed to start Account Service:",
             error
         );
 
