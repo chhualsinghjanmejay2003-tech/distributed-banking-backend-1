@@ -1,15 +1,22 @@
-const Account = require("../models/account.model");
+const Account = require(
+    "../models/account.model"
+);
 
 const create = async (accountData) => {
     return Account.create(accountData);
 };
 
 const findByAccountNumber = async (
-    accountNumber
+    accountNumber,
+    session = null
 ) => {
-    return Account.findOne({
-        accountNumber,
-    });
+    return Account.findOne(
+        { accountNumber },
+        null,
+        session
+            ? { session }
+            : undefined
+    );
 };
 
 const findByUserId = async (userId) => {
@@ -18,7 +25,7 @@ const findByUserId = async (userId) => {
     });
 };
 
-const credit = async (
+const creditAccount = async (
     accountNumber,
     amount,
     session = null
@@ -35,12 +42,14 @@ const credit = async (
         },
         {
             new: true,
-            ...(session && { session }),
+            ...(session && {
+                session,
+            }),
         }
     );
 };
 
-const debit = async (
+const debitAccount = async (
     accountNumber,
     amount,
     session = null
@@ -60,7 +69,9 @@ const debit = async (
         },
         {
             new: true,
-            ...(session && { session }),
+            ...(session && {
+                session,
+            }),
         }
     );
 };
@@ -69,6 +80,6 @@ module.exports = {
     create,
     findByAccountNumber,
     findByUserId,
-    credit,
-    debit,
+    creditAccount,
+    debitAccount,
 };
