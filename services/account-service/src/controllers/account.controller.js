@@ -20,7 +20,11 @@ const createAccount = async (req, res, next) => {
     }
 };
 
-const getAccount = async (req, res, next) => {
+const getAccountByNumber = async (
+    req,
+    res,
+    next
+) => {
     try {
         const account =
             await accountService.getAccountByNumber(
@@ -39,7 +43,11 @@ const getAccount = async (req, res, next) => {
     }
 };
 
-const getMyAccounts = async (req, res, next) => {
+const getAccountsByUserId = async (
+    req,
+    res,
+    next
+) => {
     try {
         const accounts =
             await accountService.getAccountsByUserId(
@@ -57,15 +65,16 @@ const getMyAccounts = async (req, res, next) => {
     }
 };
 
-const creditAccount = async (req, res, next) => {
+const creditAccount = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const { accountNumber } = req.params;
-        const { amount } = req.body;
-
         const account =
             await accountService.creditAccount(
-                accountNumber,
-                amount
+                req.params.accountNumber,
+                req.body.amount
             );
 
         return res.status(200).json({
@@ -79,15 +88,16 @@ const creditAccount = async (req, res, next) => {
     }
 };
 
-const debitAccount = async (req, res, next) => {
+const debitAccount = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const { accountNumber } = req.params;
-        const { amount } = req.body;
-
         const account =
             await accountService.debitAccount(
-                accountNumber,
-                amount
+                req.params.accountNumber,
+                req.body.amount
             );
 
         return res.status(200).json({
@@ -95,6 +105,34 @@ const debitAccount = async (req, res, next) => {
             data: {
                 account,
             },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const transferAccounts = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const {
+            sourceAccountNumber,
+            destinationAccountNumber,
+            amount,
+        } = req.body;
+
+        const result =
+            await accountService.transferAccounts(
+                sourceAccountNumber,
+                destinationAccountNumber,
+                amount
+            );
+
+        return res.status(200).json({
+            status: "success",
+            data: result,
         });
     } catch (error) {
         next(error);
@@ -103,8 +141,9 @@ const debitAccount = async (req, res, next) => {
 
 module.exports = {
     createAccount,
-    getAccount,
-    getMyAccounts,
+    getAccountByNumber,
+    getAccountsByUserId,
     creditAccount,
     debitAccount,
+    transferAccounts,
 };

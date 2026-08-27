@@ -27,6 +27,12 @@ router.get(
     accountController.getMyAccounts
 );
 
+router.post(
+    "/transfer",
+    internalAuth,
+    transferAccounts
+);
+
 router.get(
     "/:accountNumber",
     authenticate,
