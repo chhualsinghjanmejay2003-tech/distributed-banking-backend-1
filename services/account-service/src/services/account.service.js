@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const accountRepository = require(
     "../repositories/account.repository"
 );
@@ -26,7 +28,6 @@ const createAccount = async ({ userId }) => {
     }
 
     let accountNumber;
-
     let existingAccount;
 
     do {
@@ -141,7 +142,10 @@ const debitAccount = async (
             throw error;
         }
 
-        if (existingAccount.status !== "active") {
+        if (
+            existingAccount.status !==
+            "active"
+        ) {
             const error = new Error(
                 "Account is inactive"
             );
@@ -163,10 +167,161 @@ const debitAccount = async (
     return account;
 };
 
+/*
+ * Atomically transfer money between
+ * two accounts.
+ *
+ * Both operations happen inside the
+ * same MongoDB transaction.
+ */
+const transferAccounts = async (
+    sourceAccountNumber,
+    destinationAccountNumber,
+    amount
+) => {
+    if (
+        !sourceAccountNumber ||
+        !destinationAccountNumber
+    ) {
+        const error = new Error(
+            "Source and destination accounts are required"
+        );
+
+        error.statusCode = 400;
+
+        throw error;
+    }
+
+    if (
+        sourceAccountNumber ===
+        destinationAccountNumber
+    ) {
+        const error = new Error(
+            "Source and destination accounts must be different"
+        );
+
+        error.statusCode = 400;
+
+        throw error;
+    }
+
+    if (
+        typeof amount !== "number" ||
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+        const error = new Error(
+            "Amount must be greater than zero"
+        );
+
+        error.statusCode = 400;
+
+        throw error;
+    }
+
+    const session =
+        await mongoose.startSession();
+
+    try {
+        let sourceAccount;
+        let destinationAccount;
+
+        await session.withTransaction(
+            async () => {
+                /*
+                 * Debit source account.
+                 *
+                 * The repository must use the
+                 * supplied MongoDB session.
+                 */
+                sourceAccount =
+                    await accountRepository.debitAccount(
+                        sourceAccountNumber,
+                        amount,
+                        session
+                    );
+
+                if (!sourceAccount) {
+                    const existingSourceAccount =
+                        await accountRepository.findByAccountNumber(
+                            sourceAccountNumber,
+                            session
+                        );
+
+                    if (
+                        !existingSourceAccount
+                    ) {
+                        const error =
+                            new Error(
+                                "Source account not found"
+                            );
+
+                        error.statusCode = 404;
+
+                        throw error;
+                    }
+
+                    if (
+                        existingSourceAccount.status !==
+                        "active"
+                    ) {
+                        const error =
+                            new Error(
+                                "Source account is inactive"
+                            );
+
+                        error.statusCode = 403;
+
+                        throw error;
+                    }
+
+                    const error =
+                        new Error(
+                            "Insufficient balance"
+                        );
+
+                    error.statusCode = 400;
+
+                    throw error;
+                }
+
+                /*
+                 * Credit destination account.
+                 */
+                destinationAccount =
+                    await accountRepository.creditAccount(
+                        destinationAccountNumber,
+                        amount,
+                        session
+                    );
+
+                if (!destinationAccount) {
+                    const error =
+                        new Error(
+                            "Destination account not found or inactive"
+                        );
+
+                    error.statusCode = 404;
+
+                    throw error;
+                }
+            }
+        );
+
+        return {
+            sourceAccount,
+            destinationAccount,
+        };
+    } finally {
+        await session.endSession();
+    }
+};
+
 module.exports = {
     createAccount,
     getAccountByNumber,
     getAccountsByUserId,
     creditAccount,
     debitAccount,
+    transferAccounts,
 };

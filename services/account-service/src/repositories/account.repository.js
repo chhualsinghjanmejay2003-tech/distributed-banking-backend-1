@@ -4,7 +4,9 @@ const create = async (accountData) => {
     return Account.create(accountData);
 };
 
-const findByAccountNumber = async (accountNumber) => {
+const findByAccountNumber = async (
+    accountNumber
+) => {
     return Account.findOne({
         accountNumber,
     });
@@ -16,9 +18,10 @@ const findByUserId = async (userId) => {
     });
 };
 
-const creditAccount = async (
+const credit = async (
     accountNumber,
-    amount
+    amount,
+    session = null
 ) => {
     return Account.findOneAndUpdate(
         {
@@ -32,13 +35,15 @@ const creditAccount = async (
         },
         {
             new: true,
+            ...(session && { session }),
         }
     );
 };
 
-const debitAccount = async (
+const debit = async (
     accountNumber,
-    amount
+    amount,
+    session = null
 ) => {
     return Account.findOneAndUpdate(
         {
@@ -55,6 +60,7 @@ const debitAccount = async (
         },
         {
             new: true,
+            ...(session && { session }),
         }
     );
 };
@@ -63,6 +69,6 @@ module.exports = {
     create,
     findByAccountNumber,
     findByUserId,
-    creditAccount,
-    debitAccount,
+    credit,
+    debit,
 };
