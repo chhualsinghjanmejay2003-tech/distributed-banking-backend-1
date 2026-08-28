@@ -8,6 +8,10 @@ const accountClient = require(
     "../clients/account.client"
 );
 
+const {
+    publishTransactionEvent,
+} = require("../events/transaction.publisher");
+
 const generateTransactionId = () => {
     return `txn-${crypto.randomUUID()}`;
 };
@@ -227,6 +231,11 @@ const createTransaction = async ({
                 transaction.transactionId,
                 "completed"
             );
+
+        await publishTransactionEvent(
+            "transaction.completed",
+            completedTransaction
+        );
 
         return completedTransaction;
     } catch (error) {
