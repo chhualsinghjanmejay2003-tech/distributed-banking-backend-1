@@ -30,7 +30,7 @@ router.get(
 router.post(
     "/transfer",
     internalAuth,
-    transferAccounts
+    accountController.transferAccounts
 );
 
 router.get(
