@@ -8,6 +8,13 @@ const {
     startTransactionConsumer,
 } = require("./consumers/transaction.consumer");
 
+const {
+    startKafkaConsumer,
+    stopKafkaConsumer,
+} = require(
+    "./consumers/transaction.kafka.consumer"
+);
+
 const startServer = async () => {
     try {
         const {
@@ -19,6 +26,8 @@ const startServer = async () => {
             channel
         );
 
+        await startKafkaConsumer();
+
         console.log(
             "Notification Service started successfully"
         );
@@ -29,6 +38,9 @@ const startServer = async () => {
             );
 
             try {
+
+                // Stop Kafka consumer
+                await stopKafkaConsumer();
                 await connection.close();
 
                 console.log(
