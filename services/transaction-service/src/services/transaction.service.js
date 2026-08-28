@@ -12,6 +12,10 @@ const {
     publishTransactionEvent,
 } = require("../events/transaction.publisher");
 
+const {
+    publishTransactionEvent: publishKafkaEvent,
+} = require("../events/transaction.kafka");
+
 const generateTransactionId = () => {
     return `txn-${crypto.randomUUID()}`;
 };
@@ -233,6 +237,11 @@ const createTransaction = async ({
             );
 
         await publishTransactionEvent(
+            "transaction.completed",
+            completedTransaction
+        );
+
+        await publishKafkaEvent(
             "transaction.completed",
             completedTransaction
         );

@@ -13,6 +13,11 @@ const {
     closeRabbitMQ,
 } = require("./config/rabbitmq");
 
+const {
+    connectKafka,
+    disconnectKafka,
+} = require("./config/kafka");
+
 let server;
 
 const startServer = async () => {
@@ -22,6 +27,9 @@ const startServer = async () => {
 
         // Connect to RabbitMQ
         await connectRabbitMQ();
+
+        // Connect to Kafka
+        await connectKafka();
 
         // Start HTTP server
         server = app.listen(
@@ -65,6 +73,9 @@ const shutdown = async (signal) => {
 
         // Close RabbitMQ
         await closeRabbitMQ();
+
+        // Close Kafka
+        await disconnectKafka();
 
         // Close MongoDB
         await disconnectMongoDB();
