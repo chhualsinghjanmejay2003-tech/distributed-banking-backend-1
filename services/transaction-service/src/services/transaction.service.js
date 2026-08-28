@@ -211,12 +211,8 @@ const createTransaction = async ({
 
         // Transfer
         if (type === "transfer") {
-            await accountClient.debitAccount(
+            await accountClient.transferAccounts(
                 sourceAccountId,
-                amount
-            );
-
-            await accountClient.creditAccount(
                 destinationAccountId,
                 amount
             );
