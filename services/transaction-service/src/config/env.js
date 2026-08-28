@@ -18,6 +18,9 @@ const env = {
 
     jwtSecret:
         process.env.JWT_ACCESS_SECRET,
+
+    rabbitmqUrl:
+        process.env.RABBITMQ_URL,
 };
 
 if (!env.mongoUri) {
@@ -41,6 +44,12 @@ if (!env.internalApiKey) {
 if (!env.jwtSecret) {
     throw new Error(
         "JWT_ACCESS_SECRET is required"
+    );
+}
+
+if (!env.rabbitmqUrl) {
+    throw new Error(
+        "RABBITMQ_URL is required"
     );
 }
 
