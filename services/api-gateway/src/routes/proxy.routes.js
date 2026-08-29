@@ -12,28 +12,47 @@ const env = require(
 
 const router = express.Router();
 
+const createServiceProxy = (
+    target
+) =>
+    createProxyMiddleware({
+        target,
+        changeOrigin: true,
+
+        on: {
+            proxyReq: (
+                proxyReq,
+                req
+            ) => {
+                if (req.requestId) {
+                    proxyReq.setHeader(
+                        "x-request-id",
+                        req.requestId
+                    );
+                }
+            },
+        },
+    });
+
 router.use(
     "/auth",
-    createProxyMiddleware({
-        target: env.authServiceUrl,
-        changeOrigin: true,
-    })
+    createServiceProxy(
+        env.authServiceUrl
+    )
 );
 
 router.use(
     "/accounts",
-    createProxyMiddleware({
-        target: env.accountServiceUrl,
-        changeOrigin: true,
-    })
+    createServiceProxy(
+        env.accountServiceUrl
+    )
 );
 
 router.use(
     "/transactions",
-    createProxyMiddleware({
-        target: env.transactionServiceUrl,
-        changeOrigin: true,
-    })
+    createServiceProxy(
+        env.transactionServiceUrl
+    )
 );
 
 module.exports = router;

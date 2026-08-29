@@ -6,6 +6,10 @@ const proxyRoutes = require(
 
 const app = express();
 
+app.use(
+    requestIdMiddleware
+);
+
 app.get(
     "/health",
     (req, res) => {
