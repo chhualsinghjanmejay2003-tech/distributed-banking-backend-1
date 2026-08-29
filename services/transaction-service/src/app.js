@@ -4,15 +4,29 @@ const transactionRoutes = require(
     "./routes/transaction.routes"
 );
 
-const requestIdMiddleware =
-    require(
-        "./middleware/request-id.middleware"
-    );
+const requestIdMiddleware = require(
+    "./middleware/request-id.middleware"
+);
+
+const errorMiddleware = require(
+    "./middleware/error.middleware"
+);
 
 const app = express();
 
+
+// -------------------------
+// Global Middleware
+// -------------------------
+
 app.use(express.json());
+
 app.use(requestIdMiddleware);
+
+
+// -------------------------
+// Health Check
+// -------------------------
 
 app.get("/health", (req, res) => {
     return res.status(200).json({
@@ -21,10 +35,20 @@ app.get("/health", (req, res) => {
     });
 });
 
+
+// -------------------------
+// Transaction Routes
+// -------------------------
+
 app.use(
     "/transactions",
     transactionRoutes
 );
+
+
+// -------------------------
+// 404 - Route Not Found
+// -------------------------
 
 app.use((req, res) => {
     return res.status(404).json({
@@ -33,17 +57,12 @@ app.use((req, res) => {
     });
 });
 
-app.use((error, req, res, next) => {
-    console.error(error);
 
-    return res.status(
-        error.statusCode || 500
-    ).json({
-        status: "error",
-        message:
-            error.message ||
-            "Internal server error",
-    });
-});
+// -------------------------
+// Global Error Handler
+// -------------------------
+
+app.use(errorMiddleware);
+
 
 module.exports = app;

@@ -9,6 +9,12 @@ const requestIdMiddleware =
         "./middleware/request-id.middleware"
     );
 
+
+const errorMiddleware =
+    require(
+        "./middleware/error.middleware"
+    );
+
 const app = express();
 
 app.use(express.json());
@@ -22,5 +28,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/accounts", accountRoutes);
+
+app.use(errorMiddleware);
 
 module.exports = app;
