@@ -1,30 +1,40 @@
-const jwt = require("jsonwebtoken");
-const env = require("../config/env");
+const {
+    verifyAccessToken,
+} = require("../utils/jwt");
 
-const authenticate = (req, res, next) => {
+const authenticate = (
+    req,
+    res,
+    next
+) => {
     try {
-        const authHeader = req.headers.authorization;
+        const authHeader =
+            req.headers.authorization;
 
         if (!authHeader) {
             return res.status(401).json({
                 status: "error",
-                message: "Authorization header is required",
+                message:
+                    "Authorization header is required",
             });
         }
 
-        const [scheme, token] = authHeader.split(" ");
+        const [scheme, token] =
+            authHeader.split(" ");
 
-        if (scheme !== "Bearer" || !token) {
+        if (
+            scheme !== "Bearer" ||
+            !token
+        ) {
             return res.status(401).json({
                 status: "error",
-                message: "Invalid authorization format",
+                message:
+                    "Invalid authorization format",
             });
         }
 
-        const decoded = jwt.verify(
-            token,
-            env.jwtAccessSecret
-        );
+        const decoded =
+            verifyAccessToken(token);
 
         req.user = decoded;
 
@@ -32,7 +42,8 @@ const authenticate = (req, res, next) => {
     } catch (error) {
         return res.status(401).json({
             status: "error",
-            message: "Invalid or expired access token",
+            message:
+                "Invalid or expired access token",
         });
     }
 };

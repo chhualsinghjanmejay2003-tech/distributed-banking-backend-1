@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
 
+const JWT_ALGORITHM = "HS256";
+
 const generateAccessToken = (user) => {
     return jwt.sign(
         {
@@ -9,7 +11,9 @@ const generateAccessToken = (user) => {
         },
         env.jwtAccessSecret,
         {
-            expiresIn: env.jwtAccessExpiresIn,
+            expiresIn:
+                env.jwtAccessExpiresIn,
+            algorithm: JWT_ALGORITHM,
         }
     );
 };
@@ -17,7 +21,10 @@ const generateAccessToken = (user) => {
 const verifyAccessToken = (token) => {
     return jwt.verify(
         token,
-        env.jwtAccessSecret
+        env.jwtAccessSecret,
+        {
+            algorithms: [JWT_ALGORITHM],
+        }
     );
 };
 

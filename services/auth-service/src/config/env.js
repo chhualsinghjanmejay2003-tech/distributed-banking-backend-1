@@ -1,26 +1,43 @@
 require("dotenv").config();
 
 const env = {
-    nodeEnv: process.env.NODE_ENV || "development",
+    nodeEnv:
+        process.env.NODE_ENV ||
+        "development",
 
-    port: Number(process.env.AUTH_SERVICE_PORT) || 3001,
+    port:
+        Number(
+            process.env.AUTH_SERVICE_PORT
+        ) || 3001,
 
-    mongodbUri: process.env.MONGODB_URI,
+    mongodbUri:
+        process.env.MONGODB_URI,
 
-    redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
+    redisUrl:
+        process.env.REDIS_URL ||
+        "redis://localhost:6379",
 
-    rabbitmqUrl: process.env.RABBITMQ_URL || "amqp://localhost:5672",
+    rabbitmqUrl:
+        process.env.RABBITMQ_URL ||
+        "amqp://localhost:5672",
 
-    
-    jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
+    jwtAccessSecret:
+        process.env.JWT_ACCESS_SECRET,
 
-    jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
-    jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
+    jwtAccessExpiresIn:
+        process.env.JWT_ACCESS_EXPIRES_IN ||
+        "15m",
+
+    jwtRefreshSecret:
+        process.env.JWT_REFRESH_SECRET,
 
     jwtRefreshExpiresIn:
-    process.env.JWT_REFRESH_EXPIRES_IN,
+        process.env.JWT_REFRESH_EXPIRES_IN ||
+        "7d",
 
-    logLevel: process.env.LOG_LEVEL || "info",
+    logLevel:
+        process.env.LOG_LEVEL ||
+        "info",
 
     kafkaBrokers: (
         process.env.KAFKA_BROKERS ||
@@ -29,19 +46,21 @@ const env = {
 };
 
 if (!env.mongodbUri) {
-    throw new Error("MONGODB_URI is required");
+    throw new Error(
+        "MONGODB_URI is required"
+    );
 }
 
 if (!env.jwtAccessSecret) {
-    throw new Error("JWT_ACCESS_SECRET is required");
+    throw new Error(
+        "JWT_ACCESS_SECRET is required"
+    );
 }
 
 if (!env.jwtRefreshSecret) {
-    throw new Error("JWT_REFRESH_SECRET is required");
-}
-
-if (!process.env.JWT_ACCESS_SECRET) {
-    throw new Error("JWT_ACCESS_SECRET is required");
+    throw new Error(
+        "JWT_REFRESH_SECRET is required"
+    );
 }
 
 module.exports = env;

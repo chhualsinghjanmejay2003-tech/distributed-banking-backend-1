@@ -1,4 +1,7 @@
-const userRepository = require("../repositories/user.repository");
+const userRepository = require(
+    "../repositories/user.repository"
+);
+
 const {
     hashPassword,
     comparePassword,
@@ -15,7 +18,10 @@ const {
 const {
     createSession,
     getSession,
-} = require("../repositories/session.repository");
+    deleteSession,
+} = require(
+    "../repositories/session.repository"
+);
 
 const {
     parseDurationToSeconds,
@@ -23,25 +29,39 @@ const {
 
 const env = require("../config/env");
 
-const register = async ({ name, email, password }) => {
-    const normalizedEmail = email.trim().toLowerCase();
+
+const register = async ({
+    name,
+    email,
+    password,
+}) => {
+    const normalizedEmail =
+        email.trim().toLowerCase();
 
     const existingUser =
-        await userRepository.findByEmail(normalizedEmail);
+        await userRepository.findByEmail(
+            normalizedEmail
+        );
 
     if (existingUser) {
-        const error = new Error("Email already registered");
+        const error = new Error(
+            "Email already registered"
+        );
+
         error.statusCode = 409;
+
         throw error;
     }
 
-    const passwordHash = await hashPassword(password);
+    const passwordHash =
+        await hashPassword(password);
 
-    const user = await userRepository.create({
-        name: name.trim(),
-        email: normalizedEmail,
-        passwordHash,
-    });
+    const user =
+        await userRepository.create({
+            name: name.trim(),
+            email: normalizedEmail,
+            passwordHash,
+        });
 
     return {
         id: user._id,
@@ -53,48 +73,72 @@ const register = async ({ name, email, password }) => {
     };
 };
 
-const login = async ({ email, password }) => {
-    const normalizedEmail = email.trim().toLowerCase();
 
-    const user = await userRepository.findByEmail(
-        normalizedEmail
-    );
+const login = async ({
+    email,
+    password,
+}) => {
+    const normalizedEmail =
+        email.trim().toLowerCase();
+
+    const user =
+        await userRepository.findByEmail(
+            normalizedEmail
+        );
 
     if (!user) {
-        const error = new Error("Invalid email or password");
+        const error = new Error(
+            "Invalid email or password"
+        );
+
         error.statusCode = 401;
+
         throw error;
     }
 
     if (!user.isActive) {
-        const error = new Error("Account is inactive");
+        const error = new Error(
+            "Account is inactive"
+        );
+
         error.statusCode = 403;
+
         throw error;
     }
 
-    const passwordMatches = await comparePassword(
-        password,
-        user.passwordHash
-    );
+    const passwordMatches =
+        await comparePassword(
+            password,
+            user.passwordHash
+        );
 
     if (!passwordMatches) {
-        const error = new Error("Invalid email or password");
+        const error = new Error(
+            "Invalid email or password"
+        );
+
         error.statusCode = 401;
+
         throw error;
     }
 
-    const accessToken = generateAccessToken(user);
+    const accessToken =
+        generateAccessToken(user);
 
-    const refreshToken = generateRefreshToken();
+    const refreshToken =
+        generateRefreshToken();
 
-    const refreshTokenTtl = parseDurationToSeconds(
-        env.jwtRefreshExpiresIn
-    );
+    const refreshTokenTtl =
+        parseDurationToSeconds(
+            env.jwtRefreshExpiresIn
+        );
 
     await createSession(
         refreshToken,
         {
-            userId: user._id.toString(),
+            userId:
+                user._id.toString(),
+
             role: user.role,
         },
         refreshTokenTtl
@@ -103,6 +147,7 @@ const login = async ({ email, password }) => {
     return {
         accessToken,
         refreshToken,
+
         user: {
             id: user._id,
             name: user.name,
@@ -113,43 +158,99 @@ const login = async ({ email, password }) => {
     };
 };
 
-const refresh = async (refreshToken) => {
+
+const refresh = async (
+    refreshToken
+) => {
     if (!refreshToken) {
-        const error = new Error("Refresh token is required");
+        const error = new Error(
+            "Refresh token is required"
+        );
+
         error.statusCode = 401;
+
         throw error;
     }
 
-    const session = await getSession(refreshToken);
+    const session =
+        await getSession(
+            refreshToken
+        );
 
     if (!session) {
-        const error = new Error("Invalid or expired refresh token");
+        const error = new Error(
+            "Invalid or expired refresh token"
+        );
+
         error.statusCode = 401;
+
         throw error;
     }
 
-    const user = await userRepository.findById(
-        session.userId
-    );
+    const user =
+        await userRepository.findById(
+            session.userId
+        );
 
     if (!user) {
-        const error = new Error("User not found");
+        const error = new Error(
+            "User not found"
+        );
+
         error.statusCode = 401;
+
         throw error;
     }
 
     if (!user.isActive) {
-        const error = new Error("Account is inactive");
+        const error = new Error(
+            "Account is inactive"
+        );
+
         error.statusCode = 403;
+
         throw error;
     }
 
-    const accessToken = generateAccessToken(user);
+    /*
+     * Refresh-token rotation
+     *
+     * The old refresh token is invalidated
+     * before issuing a new one.
+     */
+    await deleteSession(
+        refreshToken
+    );
+
+    const newRefreshToken =
+        generateRefreshToken();
+
+    const refreshTokenTtl =
+        parseDurationToSeconds(
+            env.jwtRefreshExpiresIn
+        );
+
+    await createSession(
+        newRefreshToken,
+        {
+            userId:
+                user._id.toString(),
+
+            role: user.role,
+        },
+        refreshTokenTtl
+    );
+
+    const accessToken =
+        generateAccessToken(user);
 
     return {
         accessToken,
+        refreshToken:
+            newRefreshToken,
     };
 };
+
 
 module.exports = {
     register,
