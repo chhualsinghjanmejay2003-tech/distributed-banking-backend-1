@@ -12,6 +12,11 @@ const errorMiddleware = require(
     "./middleware/error.middleware"
 );
 
+const {
+    readiness,
+    isReady,
+} = require("./config/readiness");
+
 const app = express();
 
 
@@ -32,6 +37,27 @@ app.get("/health", (req, res) => {
     return res.status(200).json({
         status: "success",
         message: "Transaction Service is healthy",
+    });
+});
+
+
+// -------------------------
+// Readiness Check
+// -------------------------
+
+app.get("/ready", (req, res) => {
+    if (!isReady()) {
+        return res.status(503).json({
+            status: "error",
+            message: "Transaction Service is not ready",
+            dependencies: readiness,
+        });
+    }
+
+    return res.status(200).json({
+        status: "success",
+        message: "Transaction Service is ready",
+        dependencies: readiness,
     });
 });
 

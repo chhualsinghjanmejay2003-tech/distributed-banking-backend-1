@@ -2,7 +2,7 @@ const axios = require("axios");
 
 const env = require("../config/env");
 
-const accountClient = axios.create({
+ const accountClient = axios.create({
     baseURL: env.accountServiceUrl,
     timeout: 5000,
     headers: {

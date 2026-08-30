@@ -15,40 +15,91 @@ const {
     "./consumers/transaction.kafka.consumer"
 );
 
-const startServer = async () => {
-    try {
-        const {
-            connection,
-            channel,
-        } = await connectRabbitMQ();
+const {
+    readiness,
+} = require("./config/readiness");
 
+
+const startServer = async () => {
+    let connection;
+
+    try {
+
+        /*
+         * RabbitMQ
+         */
+        const rabbitMQ =
+            await connectRabbitMQ();
+
+        connection =
+            rabbitMQ.connection;
+
+        const channel =
+            rabbitMQ.channel;
+
+        readiness.rabbitmq = true;
+
+
+        /*
+         * RabbitMQ consumer
+         */
         await startTransactionConsumer(
             channel
         );
 
+
+        /*
+         * Kafka
+         */
         await startKafkaConsumer();
+
+        readiness.kafka = true;
+
 
         console.log(
             "Notification Service started successfully"
         );
 
-        const shutdown = async (signal) => {
+
+        /*
+         * Graceful shutdown
+         */
+        const shutdown = async (
+            signal
+        ) => {
+
             console.log(
                 `${signal} received. Shutting down...`
             );
 
             try {
 
-                // Stop Kafka consumer
+                /*
+                 * Stop Kafka consumer
+                 */
                 await stopKafkaConsumer();
-                await connection.close();
+
+                readiness.kafka = false;
+
+
+                /*
+                 * Close RabbitMQ
+                 */
+                if (connection) {
+                    await connection.close();
+                }
+
+                readiness.rabbitmq = false;
+
 
                 console.log(
                     "Notification Service shut down successfully"
                 );
 
                 process.exit(0);
+
             } catch (error) {
+
                 console.error(
                     "Error during shutdown:",
                     error.message
@@ -57,6 +108,7 @@ const startServer = async () => {
                 process.exit(1);
             }
         };
+
 
         process.on(
             "SIGINT",
@@ -67,7 +119,12 @@ const startServer = async () => {
             "SIGTERM",
             () => shutdown("SIGTERM")
         );
+
     } catch (error) {
+
+        readiness.rabbitmq = false;
+        readiness.kafka = false;
+
         console.error(
             "Failed to start Notification Service:",
             error.message
@@ -76,5 +133,6 @@ const startServer = async () => {
         process.exit(1);
     }
 };
+
 
 startServer();

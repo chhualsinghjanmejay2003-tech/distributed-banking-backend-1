@@ -18,18 +18,34 @@ const {
     disconnectKafka,
 } = require("./config/kafka");
 
+const {
+    readiness,
+} = require("./config/readiness");
+
+
 let server;
+
 
 const startServer = async () => {
     try {
+
         // Connect to MongoDB
         await connectMongoDB();
+
+        readiness.mongodb = true;
+
 
         // Connect to RabbitMQ
         await connectRabbitMQ();
 
+        readiness.rabbitmq = true;
+
+
         // Connect to Kafka
         await connectKafka();
+
+        readiness.kafka = true;
+
 
         // Start HTTP server
         server = app.listen(
@@ -40,7 +56,9 @@ const startServer = async () => {
                 );
             }
         );
+
     } catch (error) {
+
         console.error(
             "Failed to start Transaction Service:",
             error
@@ -50,12 +68,15 @@ const startServer = async () => {
     }
 };
 
+
 const shutdown = async (signal) => {
+
     console.log(
         `${signal} received. Shutting down...`
     );
 
     try {
+
         // Stop accepting new HTTP requests
         if (server) {
             await new Promise(
@@ -71,21 +92,33 @@ const shutdown = async (signal) => {
             );
         }
 
+
         // Close RabbitMQ
         await closeRabbitMQ();
+
+        readiness.rabbitmq = false;
+
 
         // Close Kafka
         await disconnectKafka();
 
+        readiness.kafka = false;
+
+
         // Close MongoDB
         await disconnectMongoDB();
+
+        readiness.mongodb = false;
+
 
         console.log(
             "Transaction Service shut down successfully"
         );
 
         process.exit(0);
+
     } catch (error) {
+
         console.error(
             "Error during shutdown:",
             error
@@ -94,6 +127,7 @@ const shutdown = async (signal) => {
         process.exit(1);
     }
 };
+
 
 process.on(
     "SIGINT",
@@ -104,5 +138,6 @@ process.on(
     "SIGTERM",
     () => shutdown("SIGTERM")
 );
+
 
 startServer();
