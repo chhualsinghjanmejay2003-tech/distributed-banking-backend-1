@@ -1,20 +1,41 @@
-const { Kafka } = require("kafkajs");
+const {
+    Kafka,
+} = require("kafkajs");
+
 const env = require("./env");
 const logger = require("../utils/logger");
+
+const {
+    readiness,
+} = require("./readiness");
+
 
 const kafka = new Kafka({
     clientId: "auth-service",
     brokers: env.kafkaBrokers,
 });
 
-const producer = kafka.producer();
+
+const producer =
+    kafka.producer();
+
 
 const connectKafka = async () => {
+
     try {
+
         await producer.connect();
 
-        logger.info("Kafka connected successfully");
+        readiness.kafka = true;
+
+        logger.info(
+            "Kafka connected successfully"
+        );
+
     } catch (error) {
+
+        readiness.kafka = false;
+
         logger.error(
             { error: error.message },
             "Kafka connection failed"
@@ -24,11 +45,18 @@ const connectKafka = async () => {
     }
 };
 
+
 const disconnectKafka = async () => {
+
+    readiness.kafka = false;
+
     await producer.disconnect();
 
-    logger.info("Kafka connection closed");
+    logger.info(
+        "Kafka connection closed"
+    );
 };
+
 
 module.exports = {
     producer,

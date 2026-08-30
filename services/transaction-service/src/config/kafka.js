@@ -2,6 +2,12 @@ const {
     Kafka,
 } = require("kafkajs");
 
+
+const {
+    readiness,
+} = require("./readiness");
+
+
 const kafka = new Kafka({
     clientId:
         "transaction-service",
@@ -12,24 +18,64 @@ const kafka = new Kafka({
     ).split(","),
 });
 
+
 const producer =
     kafka.producer();
 
-const connectKafka = async () => {
-    await producer.connect();
 
-    console.log(
-        "Kafka producer connected successfully"
-    );
+const connectKafka = async () => {
+
+    try {
+
+        await producer.connect();
+
+        readiness.kafka = true;
+
+
+        console.log(
+            "Kafka producer connected successfully"
+        );
+
+    } catch (error) {
+
+        readiness.kafka = false;
+
+        console.error(
+            "Kafka producer connection failed:",
+            error.message
+        );
+
+        throw error;
+    }
 };
+
 
 const disconnectKafka = async () => {
-    await producer.disconnect();
 
-    console.log(
-        "Kafka producer disconnected successfully"
-    );
+    try {
+
+        readiness.kafka = false;
+
+        await producer.disconnect();
+
+
+        console.log(
+            "Kafka producer disconnected successfully"
+        );
+
+    } catch (error) {
+
+        readiness.kafka = false;
+
+        console.error(
+            "Kafka producer disconnection failed:",
+            error.message
+        );
+
+        throw error;
+    }
 };
+
 
 module.exports = {
     producer,
