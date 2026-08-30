@@ -1,6 +1,8 @@
 const express = require("express");
 
-const swaggerUi = require("swagger-ui-express");
+const swaggerUi = require(
+    "swagger-ui-express"
+);
 
 const swaggerDocument = require(
     "./config/swagger"
@@ -15,18 +17,27 @@ const requestIdMiddleware =
         "./middleware/request-id.middleware"
     );
 
+
 const app = express();
 
-// Request ID / correlation ID
+
+// -------------------------
+// Request ID / Correlation ID
+// -------------------------
+
 app.use(
     requestIdMiddleware
 );
 
-// Health check
+
+// -------------------------
+// Liveness
+// -------------------------
+
 app.get(
     "/health",
     (req, res) => {
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             service: "api-gateway",
             requestId: req.requestId,
@@ -34,7 +45,28 @@ app.get(
     }
 );
 
-// Swagger / OpenAPI documentation
+
+// -------------------------
+// Readiness
+// -------------------------
+
+app.get(
+    "/ready",
+    (req, res) => {
+        return res.status(200).json({
+            success: true,
+            status: "ready",
+            service: "api-gateway",
+            requestId: req.requestId,
+        });
+    }
+);
+
+
+// -------------------------
+// Swagger / OpenAPI
+// -------------------------
+
 app.use(
     "/docs",
     swaggerUi.serve,
@@ -43,7 +75,14 @@ app.use(
     )
 );
 
-// Microservice proxy routes
-app.use(proxyRoutes);
+
+// -------------------------
+// Microservice Proxy Routes
+// -------------------------
+
+app.use(
+    proxyRoutes
+);
+
 
 module.exports = app;
