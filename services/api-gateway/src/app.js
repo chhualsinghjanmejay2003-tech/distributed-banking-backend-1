@@ -1,5 +1,7 @@
 const express = require("express");
 
+const cors = require("cors");
+
 const swaggerUi = require(
     "swagger-ui-express"
 );
@@ -19,6 +21,13 @@ const requestIdMiddleware =
 
 
 const app = express();
+
+app.use(
+    cors({
+        origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+        credentials: true,
+    })
+);
 
 
 // -------------------------
