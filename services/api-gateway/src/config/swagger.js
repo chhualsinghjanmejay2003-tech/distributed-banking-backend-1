@@ -38,6 +38,7 @@ const swaggerDocument = {
     ],
 
     components: {
+
         securitySchemes: {
             bearerAuth: {
                 type: "http",
@@ -47,6 +48,7 @@ const swaggerDocument = {
         },
 
         schemas: {
+
             RegisterRequest: {
                 type: "object",
 
@@ -57,6 +59,7 @@ const swaggerDocument = {
                 ],
 
                 properties: {
+
                     name: {
                         type: "string",
                         example: "Janmejay Singh",
@@ -78,6 +81,7 @@ const swaggerDocument = {
                 },
             },
 
+
             LoginRequest: {
                 type: "object",
 
@@ -87,6 +91,7 @@ const swaggerDocument = {
                 ],
 
                 properties: {
+
                     email: {
                         type: "string",
                         format: "email",
@@ -103,6 +108,7 @@ const swaggerDocument = {
                 },
             },
 
+
             RefreshRequest: {
                 type: "object",
 
@@ -111,6 +117,7 @@ const swaggerDocument = {
                 ],
 
                 properties: {
+
                     refreshToken: {
                         type: "string",
                         example:
@@ -118,6 +125,7 @@ const swaggerDocument = {
                     },
                 },
             },
+
 
             TransactionRequest: {
                 type: "object",
@@ -129,6 +137,7 @@ const swaggerDocument = {
                 ],
 
                 properties: {
+
                     idempotencyKey: {
                         type: "string",
                         example:
@@ -147,13 +156,13 @@ const swaggerDocument = {
                         example: "transfer",
                     },
 
-                    sourceAccountId: {
+                    sourceAccountNumber: {
                         type: "string",
                         example:
                             "123456789012",
                     },
 
-                    destinationAccountId: {
+                    destinationAccountNumber: {
                         type: "string",
                         example:
                             "987654321098",
@@ -174,11 +183,12 @@ const swaggerDocument = {
         },
     },
 
+
     paths: {
 
-        // =========================================
+        // ========================================
         // HEALTH
-        // =========================================
+        // ========================================
 
         "/health": {
             get: {
@@ -188,6 +198,7 @@ const swaggerDocument = {
                     "Check API Gateway health",
 
                 responses: {
+
                     200: {
                         description:
                             "Gateway is healthy",
@@ -197,9 +208,9 @@ const swaggerDocument = {
         },
 
 
-        // =========================================
+        // ========================================
         // AUTH
-        // =========================================
+        // ========================================
 
         "/auth/register": {
             post: {
@@ -222,6 +233,7 @@ const swaggerDocument = {
                 },
 
                 responses: {
+
                     201: {
                         description:
                             "User registered successfully",
@@ -257,6 +269,7 @@ const swaggerDocument = {
                 },
 
                 responses: {
+
                     200: {
                         description:
                             "Login successful",
@@ -297,6 +310,7 @@ const swaggerDocument = {
                 },
 
                 responses: {
+
                     200: {
                         description:
                             "Access token refreshed successfully",
@@ -316,11 +330,12 @@ const swaggerDocument = {
         },
 
 
-        // =========================================
+        // ========================================
         // ACCOUNTS
-        // =========================================
+        // ========================================
 
         "/accounts": {
+
             get: {
                 tags: ["Accounts"],
 
@@ -334,6 +349,7 @@ const swaggerDocument = {
                 ],
 
                 responses: {
+
                     200: {
                         description:
                             "Accounts returned successfully",
@@ -345,6 +361,7 @@ const swaggerDocument = {
                     },
                 },
             },
+
 
             post: {
                 tags: ["Accounts"],
@@ -359,6 +376,7 @@ const swaggerDocument = {
                 ],
 
                 responses: {
+
                     201: {
                         description:
                             "Account created successfully",
@@ -374,6 +392,7 @@ const swaggerDocument = {
 
 
         "/accounts/{accountNumber}": {
+
             get: {
                 tags: ["Accounts"],
 
@@ -387,6 +406,7 @@ const swaggerDocument = {
                 ],
 
                 parameters: [
+
                     {
                         name: "accountNumber",
 
@@ -404,6 +424,7 @@ const swaggerDocument = {
                 ],
 
                 responses: {
+
                     200: {
                         description:
                             "Account returned successfully",
@@ -423,11 +444,12 @@ const swaggerDocument = {
         },
 
 
-        // =========================================
+        // ========================================
         // TRANSACTIONS
-        // =========================================
+        // ========================================
 
         "/transactions": {
+
             post: {
                 tags: ["Transactions"],
 
@@ -454,6 +476,7 @@ const swaggerDocument = {
                 },
 
                 responses: {
+
                     201: {
                         description:
                             "Transaction created successfully",
@@ -473,7 +496,8 @@ const swaggerDocument = {
         },
 
 
-        "/transactions/account/{accountId}": {
+        "/transactions/account/{accountNumber}": {
+
             get: {
                 tags: ["Transactions"],
 
@@ -487,8 +511,9 @@ const swaggerDocument = {
                 ],
 
                 parameters: [
+
                     {
-                        name: "accountId",
+                        name: "accountNumber",
 
                         in: "path",
 
@@ -504,6 +529,7 @@ const swaggerDocument = {
                 ],
 
                 responses: {
+
                     200: {
                         description:
                             "Transactions returned successfully",
@@ -524,6 +550,7 @@ const swaggerDocument = {
 
 
         "/transactions/{transactionId}": {
+
             get: {
                 tags: ["Transactions"],
 
@@ -537,6 +564,7 @@ const swaggerDocument = {
                 ],
 
                 parameters: [
+
                     {
                         name: "transactionId",
 
@@ -554,6 +582,7 @@ const swaggerDocument = {
                 ],
 
                 responses: {
+
                     200: {
                         description:
                             "Transaction returned successfully",
@@ -573,5 +602,6 @@ const swaggerDocument = {
         },
     },
 };
+
 
 module.exports = swaggerDocument;
