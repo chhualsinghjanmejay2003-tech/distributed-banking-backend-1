@@ -16,9 +16,11 @@ const {
     publishTransactionEvent: publishKafkaEvent,
 } = require("../events/transaction.kafka");
 
+
 const generateTransactionId = () => {
     return `txn-${crypto.randomUUID()}`;
 };
+
 
 const validateAmount = (amount) => {
     if (
@@ -36,17 +38,19 @@ const validateAmount = (amount) => {
     }
 };
 
+
 const createTransaction = async ({
     idempotencyKey,
     type,
-    sourceAccountId = null,
-    destinationAccountId = null,
+    sourceAccountNumber = null,
+    destinationAccountNumber = null,
     amount,
     currency = "INR",
 }) => {
-    // --------------------------------
-    // Basic validation
-    // --------------------------------
+
+    // ========================================
+    // BASIC VALIDATION
+    // ========================================
 
     if (!idempotencyKey) {
         const error = new Error(
@@ -58,6 +62,7 @@ const createTransaction = async ({
         throw error;
     }
 
+
     if (!type) {
         const error = new Error(
             "Transaction type is required"
@@ -68,11 +73,13 @@ const createTransaction = async ({
         throw error;
     }
 
+
     const validTypes = [
         "deposit",
         "withdrawal",
         "transfer",
     ];
+
 
     if (!validTypes.includes(type)) {
         const error = new Error(
@@ -84,31 +91,35 @@ const createTransaction = async ({
         throw error;
     }
 
+
     validateAmount(amount);
 
-    // --------------------------------
-    // Idempotency check
-    // --------------------------------
+
+    // ========================================
+    // IDEMPOTENCY
+    // ========================================
 
     const existingTransaction =
         await transactionRepository.findByIdempotencyKey(
             idempotencyKey
         );
 
+
     if (existingTransaction) {
         return existingTransaction;
     }
 
-    // --------------------------------
-    // Deposit validation
-    // --------------------------------
+
+    // ========================================
+    // DEPOSIT VALIDATION
+    // ========================================
 
     if (
         type === "deposit" &&
-        !destinationAccountId
+        !destinationAccountNumber
     ) {
         const error = new Error(
-            "Destination account is required for deposit"
+            "Destination account number is required for deposit"
         );
 
         error.statusCode = 400;
@@ -116,16 +127,17 @@ const createTransaction = async ({
         throw error;
     }
 
-    // --------------------------------
-    // Withdrawal validation
-    // --------------------------------
+
+    // ========================================
+    // WITHDRAWAL VALIDATION
+    // ========================================
 
     if (
         type === "withdrawal" &&
-        !sourceAccountId
+        !sourceAccountNumber
     ) {
         const error = new Error(
-            "Source account is required for withdrawal"
+            "Source account number is required for withdrawal"
         );
 
         error.statusCode = 400;
@@ -133,14 +145,16 @@ const createTransaction = async ({
         throw error;
     }
 
-    // --------------------------------
-    // Transfer validation
-    // --------------------------------
+
+    // ========================================
+    // TRANSFER VALIDATION
+    // ========================================
 
     if (type === "transfer") {
-        if (!sourceAccountId) {
+
+        if (!sourceAccountNumber) {
             const error = new Error(
-                "Source account is required for transfer"
+                "Source account number is required for transfer"
             );
 
             error.statusCode = 400;
@@ -148,19 +162,21 @@ const createTransaction = async ({
             throw error;
         }
 
-        if (!destinationAccountId) {
+
+        if (!destinationAccountNumber) {
             const error = new Error(
-                "Destination account is required for transfer"
+                "Destination account number is required for transfer"
             );
 
             error.statusCode = 400;
 
             throw error;
         }
+
 
         if (
-            sourceAccountId ===
-            destinationAccountId
+            sourceAccountNumber ===
+            destinationAccountNumber
         ) {
             const error = new Error(
                 "Source and destination accounts must be different"
@@ -172,9 +188,10 @@ const createTransaction = async ({
         }
     }
 
-    // --------------------------------
-    // Create pending transaction
-    // --------------------------------
+
+    // ========================================
+    // CREATE PENDING TRANSACTION
+    // ========================================
 
     const transaction =
         await transactionRepository.create({
@@ -185,9 +202,9 @@ const createTransaction = async ({
 
             type,
 
-            sourceAccountId,
+            sourceAccountNumber,
 
-            destinationAccountId,
+            destinationAccountNumber,
 
             amount,
 
@@ -196,61 +213,41 @@ const createTransaction = async ({
             status: "pending",
         });
 
-    // --------------------------------
-    // Execute account operation
-    // --------------------------------
+
+    // ========================================
+    // FINANCIAL OPERATION
+    // ========================================
 
     try {
-        // Deposit
+
         if (type === "deposit") {
+
             await accountClient.creditAccount(
-                destinationAccountId,
+                destinationAccountNumber,
                 amount
             );
         }
 
-        // Withdrawal
+
         if (type === "withdrawal") {
+
             await accountClient.debitAccount(
-                sourceAccountId,
+                sourceAccountNumber,
                 amount
             );
         }
 
-        // Transfer
+
         if (type === "transfer") {
+
             await accountClient.transferAccounts(
-                sourceAccountId,
-                destinationAccountId,
+                sourceAccountNumber,
+                destinationAccountNumber,
                 amount
             );
         }
 
-        // --------------------------------
-        // Mark transaction completed
-        // --------------------------------
-
-        const completedTransaction =
-            await transactionRepository.updateStatus(
-                transaction.transactionId,
-                "completed"
-            );
-
-        await publishTransactionEvent(
-            "transaction.completed",
-            completedTransaction
-        );
-
-        await publishKafkaEvent(
-            "transaction.completed",
-            completedTransaction
-        );
-
-        return completedTransaction;
     } catch (error) {
-        // --------------------------------
-        // Mark transaction failed
-        // --------------------------------
 
         await transactionRepository.updateStatus(
             transaction.transactionId,
@@ -259,17 +256,75 @@ const createTransaction = async ({
 
         throw error;
     }
+
+
+    // ========================================
+    // MARK COMPLETED
+    // ========================================
+
+    const completedTransaction =
+        await transactionRepository.updateStatus(
+            transaction.transactionId,
+            "completed"
+        );
+
+
+    // ========================================
+    // RABBITMQ EVENT
+    // ========================================
+
+    try {
+
+        await publishTransactionEvent(
+            "transaction.completed",
+            completedTransaction
+        );
+
+    } catch (error) {
+
+        console.error(
+            "RabbitMQ event publishing failed:",
+            error.message
+        );
+    }
+
+
+    // ========================================
+    // KAFKA EVENT
+    // ========================================
+
+    try {
+
+        await publishKafkaEvent(
+            "transaction.completed",
+            completedTransaction
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Kafka event publishing failed:",
+            error.message
+        );
+    }
+
+
+    return completedTransaction;
 };
+
 
 const getTransactionById = async (
     transactionId
 ) => {
+
     const transaction =
         await transactionRepository.findByTransactionId(
             transactionId
         );
 
+
     if (!transaction) {
+
         const error = new Error(
             "Transaction not found"
         );
@@ -279,15 +334,19 @@ const getTransactionById = async (
         throw error;
     }
 
+
     return transaction;
 };
 
+
 const getTransactionsByAccountId = async (
-    accountId
+    accountNumber
 ) => {
-    if (!accountId) {
+
+    if (!accountNumber) {
+
         const error = new Error(
-            "Account ID is required"
+            "Account number is required"
         );
 
         error.statusCode = 400;
@@ -295,10 +354,12 @@ const getTransactionsByAccountId = async (
         throw error;
     }
 
+
     return transactionRepository.findByAccountId(
-        accountId
+        accountNumber
     );
 };
+
 
 module.exports = {
     createTransaction,

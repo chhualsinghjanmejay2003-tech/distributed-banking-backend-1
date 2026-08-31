@@ -26,16 +26,16 @@ const transactionSchema = new mongoose.Schema(
             required: true,
         },
 
-        sourceAccountId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Account",
+        sourceAccountNumber: {
+            type: String,
             default: null,
+            index: true,
         },
 
-        destinationAccountId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Account",
+        destinationAccountNumber: {
+            type: String,
             default: null,
+            index: true,
         },
 
         amount: {
@@ -48,6 +48,7 @@ const transactionSchema = new mongoose.Schema(
             type: String,
             required: true,
             default: "INR",
+            enum: ["INR"],
         },
 
         status: {

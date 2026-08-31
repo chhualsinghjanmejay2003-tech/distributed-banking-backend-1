@@ -2,19 +2,11 @@ const Transaction = require(
     "../models/transaction.model"
 );
 
-const create = async (transactionData) => {
-    return Transaction.create(
-        transactionData
-    );
+
+const create = async (data) => {
+    return Transaction.create(data);
 };
 
-const findByTransactionId = async (
-    transactionId
-) => {
-    return Transaction.findOne({
-        transactionId,
-    });
-};
 
 const findByIdempotencyKey = async (
     idempotencyKey
@@ -24,16 +16,28 @@ const findByIdempotencyKey = async (
     });
 };
 
+
+const findByTransactionId = async (
+    transactionId
+) => {
+    return Transaction.findOne({
+        transactionId,
+    });
+};
+
+
 const findByAccountId = async (
-    accountId
+    accountNumber
 ) => {
     return Transaction.find({
         $or: [
             {
-                sourceAccountId: accountId,
+                sourceAccountNumber:
+                    accountNumber,
             },
             {
-                destinationAccountId: accountId,
+                destinationAccountNumber:
+                    accountNumber,
             },
         ],
     }).sort({
@@ -41,23 +45,29 @@ const findByAccountId = async (
     });
 };
 
+
 const updateStatus = async (
     transactionId,
     status
 ) => {
     return Transaction.findOneAndUpdate(
-        { transactionId },
-        { status },
+        {
+            transactionId,
+        },
+        {
+            status,
+        },
         {
             new: true,
         }
     );
 };
 
+
 module.exports = {
     create,
-    findByTransactionId,
     findByIdempotencyKey,
+    findByTransactionId,
     findByAccountId,
     updateStatus,
 };

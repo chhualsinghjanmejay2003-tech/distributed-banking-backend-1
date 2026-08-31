@@ -1,41 +1,36 @@
 const express = require("express");
-
 const cors = require("cors");
 const helmet = require("helmet");
 
-const swaggerUi = require(
-    "swagger-ui-express"
+const requestIdMiddleware = require(
+    "./middleware/request-id.middleware"
 );
 
-const swaggerDocument = require(
-    "./config/swagger"
+const transactionRoutes = require(
+    "./routes/transaction.routes"
 );
 
-const proxyRoutes = require(
-    "./routes/proxy.routes"
-);
-
-const requestIdMiddleware =
-    require(
-        "./middleware/request-id.middleware"
-    );
+const {
+    readiness,
+    isReady,
+} = require("./config/readiness");
 
 
 const app = express();
 
 
-// -------------------------
-// Security Headers
-// -------------------------
+// ========================================
+// SECURITY HEADERS
+// ========================================
 
 app.use(
     helmet()
 );
 
 
-// -------------------------
+// ========================================
 // CORS
-// -------------------------
+// ========================================
 
 app.use(
     cors({
@@ -48,9 +43,9 @@ app.use(
 );
 
 
-// -------------------------
-// Request Body Limit
-// -------------------------
+// ========================================
+// REQUEST BODY
+// ========================================
 
 app.use(
     express.json({
@@ -59,69 +54,82 @@ app.use(
 );
 
 
-// -------------------------
-// Request ID / Correlation ID
-// -------------------------
+// ========================================
+// REQUEST ID
+// ========================================
 
 app.use(
     requestIdMiddleware
 );
 
 
-// -------------------------
-// Health Check
-// -------------------------
+// ========================================
+// HEALTH CHECK
+// ========================================
 
 app.get(
     "/health",
     (req, res) => {
         return res.status(200).json({
             success: true,
-            service: "api-gateway",
-            requestId:
-                req.requestId,
+            service: "transaction-service",
+            requestId: req.requestId,
         });
     }
 );
 
 
-// -------------------------
-// Readiness Check
-// -------------------------
+// ========================================
+// READINESS CHECK
+// ========================================
 
 app.get(
     "/ready",
     (req, res) => {
+
+        if (!isReady()) {
+            return res.status(503).json({
+                success: false,
+                status: "not_ready",
+                service: "transaction-service",
+                readiness,
+                requestId: req.requestId,
+            });
+        }
+
         return res.status(200).json({
             success: true,
             status: "ready",
-            service: "api-gateway",
-            requestId:
-                req.requestId,
+            service: "transaction-service",
+            readiness,
+            requestId: req.requestId,
         });
     }
 );
 
 
-// -------------------------
-// Swagger / OpenAPI
-// -------------------------
+// ========================================
+// TRANSACTION ROUTES
+// ========================================
 
 app.use(
-    "/docs",
-    swaggerUi.serve,
-    swaggerUi.setup(
-        swaggerDocument
-    )
+    "/transactions",
+    transactionRoutes
 );
 
 
-// -------------------------
-// Microservice Proxy Routes
-// -------------------------
+// ========================================
+// 404 HANDLER
+// ========================================
 
 app.use(
-    proxyRoutes
+    (req, res) => {
+        return res.status(404).json({
+            success: false,
+            message: "Route not found",
+            requestId: req.requestId,
+        });
+    }
 );
 
 
