@@ -2,6 +2,8 @@ const express = require("express");
 
 const cors = require("cors");
 
+const helmet = require("helmet");
+
 const swaggerUi = require(
     "swagger-ui-express"
 );
@@ -21,15 +23,38 @@ const requestIdMiddleware =
 
 
 const app = express();
+
+
+// -------------------------
+// Security
+// -------------------------
+
+app.use(
+    helmet()
+);
+
+
+// -------------------------
+// Request Body
+// -------------------------
+
 app.use(
     express.json({
         limit: "10kb",
     })
 );
 
+
+// -------------------------
+// CORS
+// -------------------------
+
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+        origin:
+            process.env.CORS_ORIGIN ||
+            "http://localhost:3000",
+
         credentials: true,
     })
 );
@@ -51,10 +76,15 @@ app.use(
 app.get(
     "/health",
     (req, res) => {
+
         return res.status(200).json({
             success: true,
-            service: "api-gateway",
-            requestId: req.requestId,
+
+            service:
+                "api-gateway",
+
+            requestId:
+                req.requestId,
         });
     }
 );
@@ -67,11 +97,17 @@ app.get(
 app.get(
     "/ready",
     (req, res) => {
+
         return res.status(200).json({
             success: true,
+
             status: "ready",
-            service: "api-gateway",
-            requestId: req.requestId,
+
+            service:
+                "api-gateway",
+
+            requestId:
+                req.requestId,
         });
     }
 );
@@ -83,7 +119,9 @@ app.get(
 
 app.use(
     "/docs",
+
     swaggerUi.serve,
+
     swaggerUi.setup(
         swaggerDocument
     )
